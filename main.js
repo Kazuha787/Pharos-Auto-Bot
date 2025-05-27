@@ -446,6 +446,30 @@ async function main() {
       continue;
     }
 
+    if (selected.value === "databaseManager") {
+      logger("System | Starting Database Manager...");
+      await databaseManagerMenu(logger);
+      // No tasks to report after DB manager, so use empty/defaults
+      await sendMenuTaskTelegramReport({
+        logger,
+        selected: { label: "Database Manager" },
+        completedTasks: [],
+        failedTasks: [],
+        totalTasks: 0,
+        walletIdx: 1,
+        totalWallets: 1
+      });
+      await requestInput("Press Enter to continue...");
+      continue;
+    }
+
+    if (selected.value === "automateAllTasks") {
+      logger("System | Starting Auto with DB Manager...");
+      await automateAllTasks(logger);
+      await requestInput("Press Enter to continue...");
+      continue;
+    }
+
     let completedTasks = [];
     let failedTasks = [];
     let totalTasks = 1;
@@ -517,84 +541,74 @@ const automatableTasks = [
 ];
 
 async function automateAllTasks(logger) {
-  global.suppressTelegramLogs = true; // Suppress per-task Telegram logs
-  const botName = 'MegaETH StarLabs Bot';
-  const config = getConfig();
-  const settings = {
-    THREADS: config.SETTINGS.THREADS,
-    ATTEMPTS: config.SETTINGS.ATTEMPTS,
-    PAUSE_BETWEEN_ATTEMPTS: config.SETTINGS.PAUSE_BETWEEN_ATTEMPTS,
-    PAUSE_BETWEEN_SWAPS: config.SETTINGS.PAUSE_BETWEEN_SWAPS,
-    RANDOM_PAUSE: config.SETTINGS.RANDOM_PAUSE,
-    RANDOM_PAUSE_BETWEEN_ACCOUNTS: config.SETTINGS.RANDOM_PAUSE_BETWEEN_ACCOUNTS,
-    RANDOM_PAUSE_BETWEEN_ACTIONS: config.SETTINGS.RANDOM_PAUSE_BETWEEN_ACTIONS,
-    skipFailed: false
-  };
-  // Shuffle wallets for human-like behavior
-  const wallets = [...global.selectedWallets];
-  for (let i = wallets.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [wallets[i], wallets[j]] = [wallets[j], wallets[i]];
-  }
-  let walletIdx = 0;
-  for (const wallet of wallets) {
-    walletIdx++;
-    const pk = wallet.privatekey;
-    const { getAddressFromPrivateKey, sendTelegramSummary } = require('./src/utils/telegramLogger');
-    const address = getAddressFromPrivateKey(pk);
-    let { tasks, status } = dbManager.getWalletTasks(address); // FIX: use address
-    if (!tasks || !tasks.length) {
-      logger(`System | Wallet ${address.slice(0,6)}... has no tasks in DB. Use Database Manager to assign tasks.`);
+  const db = dbManager.loadDB();
+  const walletAddresses = Object.keys(db);
+  let totalWallets = walletAddresses.length;
+  let allCompletedTasks = [];
+  let allFailedTasks = [];
+  let totalTasks = 0;
+
+  for (const address of walletAddresses) {
+    const walletData = db[address];
+    const walletInfo = dbManager.getWalletInfo(address);
+    if (!walletInfo || !walletInfo.privatekey) {
+      logger(`System | Wallet ${address.slice(0, 8)}... | Warning: Missing private key in wallet.json`);
       continue;
     }
-    if (status === 'completed') {
-      logger(`System | Wallet ${address.slice(0,6)}... already completed. Skipping.`);
-      continue;
-    }
-    // Shuffle pending tasks for this wallet
-    let pendingTasks = tasks.filter(t => t.status === 'pending');
-    for (let i = pendingTasks.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [pendingTasks[i], pendingTasks[j]] = [pendingTasks[j], pendingTasks[i]];
-    }
-    let completedTasks = [];
-    let failedTasks = [];
-    for (const task of pendingTasks) {
-      logger(`System | Wallet ${address.slice(0,6)}... | Running task: ${task.name}`);
-      try {
-        // Wrap with telegramTaskWrapper for automation mode only
-        const taskFunc = telegramTasks.includes(task.name)
-          ? telegramTaskWrapper(task.name, service[task.name])
-          : service[task.name];
-        if (taskFunc) {
-          await taskFunc(logger);
-          dbManager.updateTaskStatus(address, task.name, 'completed');
-          logger(`System | Wallet ${address.slice(0,6)}... | Task ${task.name} completed.`);
-          completedTasks.push(task.name);
-        } else {
-          logger(`System | Wallet ${address.slice(0,6)}... | Task ${task.name} not implemented.`);
-          failedTasks.push(task.name);
+    const walletTasks = walletData.tasks || [];
+    totalTasks += walletTasks.length;
+
+    // Use walletInfo for sensitive data
+    global.selectedWallets = [{
+      privatekey: walletInfo.privatekey,
+      token: walletData.token,
+      name: walletData.name,
+      address: address
+    }];
+
+    for (const task of walletTasks) {
+      if (task.status === "completed") {
+        allCompletedTasks.push(task.name);
+        continue;
+      }
+      logger(`System | Wallet ${address.slice(0, 8)}... | Running task: ${task.name}`);
+      const fn = service[task.name];
+      if (typeof fn === "function") {
+        try {
+          await fn(logger);
+          dbManager.updateTaskStatus(address, task.name, "completed");
+          allCompletedTasks.push(task.name);
+          logger(`System | Wallet ${address.slice(0, 8)}... | ✔ Task ${task.name} completed`);
+        } catch (err) {
+          dbManager.updateTaskStatus(address, task.name, "failed");
+          allFailedTasks.push(task.name);
+          logger(`System | Wallet ${address.slice(0, 8)}... | ✖ Task ${task.name} failed: ${err.message}`);
         }
-      } catch (e) {
-        logger(`System | Wallet ${address.slice(0,6)}... | Task ${task.name} failed: ${e.message}`);
-        failedTasks.push(task.name);
+      } else {
+        dbManager.updateTaskStatus(address, task.name, "failed");
+        allFailedTasks.push(task.name);
+        logger(`System | Wallet ${address.slice(0, 8)}... | ✖ Task ${task.name} not implemented`);
       }
     }
-    logger(`System | Wallet ${address.slice(0,6)}... | All pending tasks processed.`);
-    await sendTelegramSummary({
-      botName,
-      walletName: wallet.name || address.slice(0,6),
-      walletAddress: address,
-      completedTasks,
-      failedTasks,
-      totalTasks: tasks.length,
-      settings,
-      walletNumber: walletIdx,
-      totalWallets: wallets.length
-    });
+    logger(`System | Wallet ${address.slice(0, 8)}... | All pending tasks processed.`);
   }
-  global.suppressTelegramLogs = false; // Re-enable per-task logs after automation
-  logger(`System | Automation complete for all wallets.`);
+
+  // Remove duplicates and sort for reporting
+  const uniqueCompleted = [...new Set(allCompletedTasks)].sort();
+  const uniqueFailed = [...new Set(allFailedTasks)].sort();
+
+  // Send a single detailed Telegram report for all wallets/tasks
+  await sendMenuTaskTelegramReport({
+    logger,
+    selected: { label: "Auto with DB Manager" },
+    completedTasks: uniqueCompleted,
+    failedTasks: uniqueFailed,
+    totalTasks,
+    walletIdx: totalWallets,
+    totalWallets
+  });
+
+  logger("System | Automation complete for all wallets.");
 }
 
 // Database manager menu

@@ -26,7 +26,10 @@ Perfect for testers, point farmers, and developers who want to automate repetiti
   - Native/Token (USDC, USDT) faucet claims
   - Social tasks (Follow on X, Retweet, Comment, Join Discord)
   - On-chain actions (Self-transfers, Token swaps, Add liquidity)
-
+  - DB manager for full automation manages 
+  - statics integration 
+  - telegram integration
+  - config yaml for modification 
 - **Multi-Threaded Execution**  
   Efficient task handling using asynchronous JavaScript threading.
 
@@ -52,6 +55,7 @@ pharos_bot/
 ├── package.json       # Node.js project configuration
 ├── node_modules/      # Installed dependencies
 └── README.md          # Project documentation
+└── cofig.yaml         # setting cofig and all setting telegram also 
 ```
 ## ⚙️ Requirements
 
@@ -69,7 +73,7 @@ Before using the bot, make sure you have:
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/Kazuha787/Pharos-Auto-Bot.git
+git clone https://github.com/Ansh7473/Pharosh-by-Ansh-Kazuha-.git
 cd Pharos-Auto-Bot
 ```
 # 2. Install dependencies
@@ -84,7 +88,7 @@ nano wallet.jsom
 
 # Put Your `wallet` Adddress in `wallet.txt`
 ```
-nano wallet.txt
+nano wallet.txt # trnasfer wallet here u want to trnasfer random transfer 
 ```
 
 # 4. Run the bot
@@ -102,8 +106,7 @@ Join the official Telegram group for support, discussion, and announcements:
 
 Whether you're facing issues, contributing improvements, or just vibing — everyone's welcome.
 
-Have a feature request or found a bug?  
-→ Open an [Issue](https://github.com/Kazuha787/Pharos-Auto-Bot/issues) or submit a [Pull Request](https://github.com/Kazuha787/Pharos-Auto-Bot/pulls).
+
 
 ---
 

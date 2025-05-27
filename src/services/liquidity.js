@@ -2,13 +2,13 @@
  * src/services/liquidity.js - Add liquidity service
  */
 const { ethers } = require('ethers');
-const { loadConfig } = require('../config');
+const getConfig = require('../../getConfig');
 const { retry, sleep } = require('../utils/helpers');
 const { TOKEN_ADDRESSES, CONTRACT_ADDRESSES, FEE_TIERS } = require('../utils/constants');
 const { toChecksumAddress } = require('../utils/wallet');
 
-// Load configuration
-const config = loadConfig();
+// Config
+const config = getConfig();
 
 // Position Manager ABI for adding liquidity
 const POSITION_MANAGER_ABI = [

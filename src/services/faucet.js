@@ -1,13 +1,13 @@
 /**
  * src/services/faucet.js - Faucet claim service
  */
-const { loadConfig } = require('../config');
+const getConfig = require('../../getConfig');
 const { retry, sleep, isProxyError } = require('../utils/helpers');
 const { TOKEN_ADDRESSES } = require('../utils/constants');
 const RecaptchaService = require('./recaptcha');
 
 // Load configuration
-const config = loadConfig();
+const config = getConfig();
 
 class FaucetService {
   constructor(axios, wallet, logger, walletIndex) {

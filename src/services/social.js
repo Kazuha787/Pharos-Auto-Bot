@@ -1,11 +1,11 @@
 /**
  * src/services/social.js - Social tasks service
  */
-const { loadConfig } = require('../config');
+const getConfig = require('../../getConfig');
 const { retry } = require('../utils/helpers');
 
 // Load configuration
-const config = loadConfig();
+const config = getConfig();
 
 class SocialService {
   constructor(axios, logger, walletIndex) {

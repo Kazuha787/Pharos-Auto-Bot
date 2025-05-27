@@ -1,11 +1,11 @@
 /**
  * src/services/recaptcha.js - Recaptcha solver service
  */
-const { loadConfig } = require('../config');
+const getConfig = require('../../getConfig');
 const { retry } = require('../utils/helpers');
 
 // Load configuration
-const config = loadConfig();
+const config = getConfig;
 
 class RecaptchaService {
   constructor(axios, logger, walletIndex) {

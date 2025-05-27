@@ -2,11 +2,10 @@
  * src/services/auth.js - Authentication service
  */
 const { signMessage } = require('../utils/wallet');
-const { loadConfig } = require('../config');
+const getConfig = require('../../getConfig');
 const { retry } = require('../utils/helpers');
 
-// Load configuration
-const config = loadConfig();
+const config = getConfig();
 
 class AuthService {
   constructor(axios, wallet, logger, walletIndex) {

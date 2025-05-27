@@ -1,0 +1,53 @@
+SETTINGS:
+  THREADS: 3
+  ATTEMPTS: 3
+  ACCOUNTS_RANGE: [0, 3]
+  EXACT_ACCOUNTS_TO_USE: EQU
+  PAUSE_BETWEEN_ATTEMPTS: [3, 5]
+  PAUSE_BETWEEN_SWAPS: [3, 5]
+  RANDOM_PAUSE: [3, 5]
+  RANDOM_PAUSE_BETWEEN_ACCOUNTS: [3, 5]
+  RANDOM_PAUSE_BETWEEN_ACTIONS: [3, 5]
+  RANDOM_INITIALIZATION_PAUSE: [1, 3]
+  TELEGRAM_LOGS: true  # or false to disable
+  TELEGRAM_BOT_TOKEN: '8127721728:AAF-cmaZQotdNAeNyQOxSUCRXCXt6j_yBw8'
+  TELEGRAM_USERS_IDS: ['5768636242']
+FLOW:
+  NUMBER_OF_SWAPS: [1, 1]
+  PERCENT_OF_BALANCE_TO_SWAP: [1, 2] ####same applies for liquidity add 
+  NUMBER_OF_LIQUIDITY_ADDS: [1, 1]
+  NUMBER_OF_TRANSFERS: [6, 10]
+  SOCIAL_TASKS: [201, 202, 203, 204]
+  TASKS:
+    - login
+    - checkin
+    - check
+    - claim_faucet_phrs
+    - claim_faucet_usdc
+    - swap_usdc
+    - swap_usdt
+    - add_liquidity_usdc
+    - add_liquidity_usdt
+    - social_task
+    - random_transfer
+    - unlimited_faucet
+FAUCET:
+  CLAIM_NATIVE: true
+  CLAIM_USDC: true
+  CLAIM_USDT: true
+  MIN_BALANCE_FOR_FAUCET: 0.2
+TRANSFER:
+  MIN_BALANCE_FOR_DISPERSE: 0.0001
+  TRANSFER_AMOUNT: [0.000001, 0.000002]
+general:
+  retry_attempts: 3
+  retry_delay: 3000
+api:
+  pharos:
+    base_url: 'https://api.pharosnetwork.xyz'
+    recaptcha_site_key: '6LeUcBMlAAAAAABQw8Qw8Qw8Qw8Qw8Qw8Qw8Qw8Q'
+  zenith:
+    base_url: 'https://zenith.pharosnetwork.xyz'
+    rpc_url: 'https://testnet.dplabs-internal.com'
+recaptcha:
+  api_key: 'YOUR_CAPSOLVER_API_KEY_HERE' #no need for now 

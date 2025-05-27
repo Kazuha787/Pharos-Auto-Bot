@@ -1,8 +1,10 @@
 // src/utils/dbManager.js
+const { ethers } = require('ethers');
 const fs = require('fs');
 const path = require('path');
 
 const DB_PATH = path.join(__dirname, '../../wallet_tasks_db.json');
+const WALLET_PATH = path.join(__dirname, '../../wallet.json');
 
 // Example: { "0xA5adE736": { ... } }
 function loadDB() {
@@ -11,7 +13,6 @@ function loadDB() {
     const raw = fs.readFileSync(DB_PATH, 'utf8');
     // Migrate old format (private key as key) to address as key
     let db = JSON.parse(raw);
-    const { ethers } = require('ethers');
     let migrated = false;
     for (const k of Object.keys(db)) {
       if (!k.startsWith('0x') && k.length === 64) {
@@ -60,22 +61,35 @@ function updateTaskStatus(address, taskName, newStatus) {
   saveDB(db);
 }
 
-function resetDB(wallets, tasksList) {
-  // wallets: array of {privatekey, ...}, tasksList: array of task names
-  const db = {};
-  let idx = 0;
-  for (const w of wallets) {
-    idx++;
-    const { ethers } = require('ethers');
-    let address = w.address || (w.privatekey ? new ethers.Wallet(w.privatekey).address : undefined);
-    if (!address) continue;
-    db[address] = {
-      tasks: tasksList.map((name, tIdx) => ({ name, status: 'pending', index: tIdx + 1 })),
-      status: 'pending',
-      walletNumber: idx
-    };
+function getAddressFromPrivateKey(privatekey) {
+  try {
+    return new ethers.Wallet(privatekey).address;
+  } catch {
+    return null;
   }
-  saveDB(db);
+}
+
+function resetDB(wallets, tasksList) {
+  const db = {};
+  wallets.forEach((w, idx) => {
+    const address = getAddressFromPrivateKey(w.privatekey);
+    if (address) {
+      db[address] = {
+        name: w.name,
+        token: w.token,
+        tasks: tasksList.map((name, tIdx) => ({ name, status: 'pending', index: tIdx + 1 })),
+        status: 'pending',
+        walletNumber: idx + 1
+      };
+    }
+  });
+  fs.writeFileSync(DB_PATH, JSON.stringify(db, null, 2));
+}
+
+function getWalletInfo(address) {
+  // Find wallet info from wallet.json by address
+  const wallets = JSON.parse(fs.readFileSync(WALLET_PATH, 'utf8')).wallets || [];
+  return wallets.find(w => getAddressFromPrivateKey(w.privatekey) === address);
 }
 
 function getAllWallets() {
@@ -90,5 +104,6 @@ module.exports = {
   setWalletTasks,
   updateTaskStatus,
   resetDB,
+  getWalletInfo,
   getAllWallets,
 };

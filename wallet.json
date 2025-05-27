@@ -2,7 +2,8 @@
   "wallets": [
     {
       "name": "name",
-      "privatekey": "your_privte_key"
+      "privatekey": "",
+      "token": ""
     }
   ]
 }

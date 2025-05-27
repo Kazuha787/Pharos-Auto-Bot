@@ -1,11 +1,11 @@
 /**
  * src/services/checkin.js - Daily check-in service
  */
-const { loadConfig } = require('../config');
+const getConfig = require('../../getConfig');
 const { retry } = require('../utils/helpers');
 
 // Load configuration
-const config = loadConfig();
+const config = getConfig;
 
 class CheckinService {
   constructor(axios, logger, walletIndex) {

@@ -2,13 +2,13 @@
  * src/services/swap.js - Token swap service
  */
 const { ethers } = require('ethers');
-const { loadConfig } = require('../config');
+const getConfig = require('../../getConfig');
 const { retry, sleep } = require('../utils/helpers');
 const { TOKEN_ADDRESSES, CONTRACT_ADDRESSES, FEE_TIERS } = require('../utils/constants');
 const { toChecksumAddress } = require('../utils/wallet');
 
-// Load configuration
-const config = loadConfig();
+// Config
+const config = getConfig();
 
 // ERC20 ABI for token approvals
 const ERC20_ABI = [

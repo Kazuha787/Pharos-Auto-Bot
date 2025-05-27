@@ -12,9 +12,16 @@
     "axios": "^1.9.0",
     "chalk": "^4.1.2",
     "colors": "^1.4.0",
-    "cron": "^3.1.7",
+    "cron": "^3.5.0",
     "ethers": "^6.14.1",
+    "fake-useragent": "^1.0.1",
+    "https-proxy-agent": "^7.0.4",
+    "inquirer": "^12.6.3",
+    "js-yaml": "^4.1.0",
     "moment": "^2.30.1",
-    "moment-timezone": "^0.5.46"
+    "moment-timezone": "^0.5.48",
+    "p-limit": "^6.2.0",
+    "querystring": "^0.2.1",
+    "socks-proxy-agent": "^7.0.0"
   }
 }

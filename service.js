@@ -10,6 +10,7 @@ const pharos = chains.testnet.pharos;
 const etc = chains.utils.etc;
 const abi = chains.utils.abi;
 const contract = chains.utils.contract;
+const getConfig = require('./getConfig');
 
 // Constants for Unlimited Faucet
 const BASE_API = "https://api.pharosnetwork.xyz";
@@ -44,8 +45,16 @@ async function askQuestion(question, logger) {
 }
 
 async function performSwapUSDC(logger) {
-  const maxRetries = 3; // Number of retry attempts for provider operations
-  const retryDelay = 5000; // Delay between retries (5 seconds)
+  // Load config values
+  const config = getConfig;
+  const flow = config.FLOW || {};
+  const numSwapsRange = flow.NUMBER_OF_SWAPS || [1, 1];
+  const percentSwapRange = flow.PERCENT_OF_BALANCE_TO_SWAP || [10, 10];
+  const minSwaps = numSwapsRange[0];
+  const maxSwaps = numSwapsRange[1];
+  const minPercent = percentSwapRange[0];
+  const maxPercent = percentSwapRange[1];
+  const numSwaps = Math.floor(Math.random() * (maxSwaps - minSwaps + 1)) + minSwaps;
   const transactionDelay = 3000; // Reduced delay between transactions (3 seconds)
 
   for (let a of global.selectedWallets || []) {
@@ -65,41 +74,51 @@ async function performSwapUSDC(logger) {
       let balanceEth = e.formatEther(balance);
       logger(`System | ${$} | Wallet balance: ${balanceEth} PHRS`);
 
-      let i = getRandomAmount(0.0001, 0.0003); // Random amount between 0.0001 and 0.0003 PHRS
-      let amountStr = e.formatEther(i);
+      // Determine number of swaps for this wallet from config
+      const config = require('./getConfig');
+      const flow = config.FLOW || {};
+      const numSwapsRange = flow.NUMBER_OF_SWAPS || [1, 1];
+      const minSwaps = numSwapsRange[0];
+      const maxSwaps = numSwapsRange[1];
+      const numSwaps = Math.floor(Math.random() * (maxSwaps - minSwaps + 1)) + minSwaps;
+      for (let w = 1; w <= numSwaps; w++) {
+        // Calculate swap amount as a percent of balance
+        const percent = Math.random() * (maxPercent - minPercent) + minPercent;
+        let i = balance * BigInt(Math.floor(percent * 100)) / BigInt(10000); // percent of balance
+        if (i < e.parseEther('0.00001')) i = e.parseEther('0.00001');
+        let amountStr = e.formatEther(i);
 
-      // Estimate gas cost for a single transaction
-      let gasPrice = await provider.getFeeData();
-      let estimatedGasLimit = BigInt(200000); // Conservative estimate for swap
-      let gasCost = gasPrice.gasPrice * estimatedGasLimit;
-      let totalCost = i + gasCost * BigInt(global.maxTransaction);
+        // Estimate gas cost for a single transaction
+        let gasPrice = await provider.getFeeData();
+        let estimatedGasLimit = BigInt(200000); // Conservative estimate for swap
+        let gasCost = gasPrice.gasPrice * estimatedGasLimit;
+        let totalCost = i + gasCost * BigInt(global.maxTransaction);
 
-      if (balance < totalCost) {
-        logger(`System | Warning: ${$} | Insufficient balance (${balanceEth} PHRS) for ${global.maxTransaction} swaps of ${amountStr} PHRS plus gas`);
-        continue;
-      }
+        if (balance < totalCost) {
+          logger(`System | Warning: ${$} | Insufficient balance (${balanceEth} PHRS) for ${global.maxTransaction} swaps of ${amountStr} PHRS plus gas`);
+          continue;
+        }
 
-      let s = contract.WPHRS.slice(2).padStart(64, "0") + contract.USDC.slice(2).padStart(64, "0");
-      let n = i.toString(16).padStart(64, "0");
-      let l =
-        "0x04e45aaf" +
-        s +
-        "0000000000000000000000000000000000000000000000000000000000000bb8" +
-        o.toLowerCase().slice(2).padStart(64, "0") +
-        n +
-        "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
-      let c = Math.floor(Date.now() / 1e3) + 600;
-      let d = ["function multicall(uint256 deadline, bytes[] calldata data) payable"];
-      let p = new e.Contract(contract.SWAP, d, r);
-      let f = p.interface.encodeFunctionData("multicall", [c, [l]]);
+        let s = contract.WPHRS.slice(2).padStart(64, "0") + contract.USDC.slice(2).padStart(64, "0");
+        let n = i.toString(16).padStart(64, "0");
+        let l =
+          "0x04e45aaf" +
+          s +
+          "0000000000000000000000000000000000000000000000000000000000000bb8" +
+          o.toLowerCase().slice(2).padStart(64, "0") +
+          n +
+          "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        let c = Math.floor(Date.now() / 1e3) + 600;
+        let d = ["function multicall(uint256 deadline, bytes[] calldata data) payable"];
+        let p = new e.Contract(contract.SWAP, d, r);
+        let f = p.interface.encodeFunctionData("multicall", [c, [l]]);
 
-      for (let w = 1; w <= global.maxTransaction; w++) {
-        logger(`System | ${$} | Initiating Swap ${amountStr} PHRS to USDC (${w}/${global.maxTransaction})`);
+        logger(`System | ${$} | Initiating Swap ${amountStr} PHRS to USDC (${w}/${numSwaps})`);
 
         let success = false;
         let attempt = 0;
 
-        while (!success && attempt < maxRetries) {
+        while (!success && attempt < 3) {
           try {
             attempt++;
             let g = {
@@ -113,12 +132,12 @@ async function performSwapUSDC(logger) {
             try {
               gasLimit = (await provider.estimateGas(g)) * 12n / 10n; // 20% buffer
             } catch (gasError) {
-              if (attempt < maxRetries) {
-                logger(`System | ${$} | Gas estimation failed (attempt ${attempt}/${maxRetries}): ${chalk.yellow(gasError.message)}. Retrying in ${retryDelay / 1000} seconds...`);
-                await etc.delay(retryDelay);
+              if (attempt < 3) {
+                logger(`System | ${$} | Gas estimation failed (attempt ${attempt}/3): ${chalk.yellow(gasError.message)}. Retrying in ${5000 / 1000} seconds...`);
+                await etc.delay(5000);
                 continue;
               } else {
-                throw new Error(`Gas estimation failed after ${maxRetries} attempts: ${gasError.message}`);
+                throw new Error(`Gas estimation failed after 3 attempts: ${gasError.message}`);
               }
             }
 
@@ -130,12 +149,12 @@ async function performSwapUSDC(logger) {
             logger(`System | ${$} | ${etc.timelog()} | Swap Confirmed: ${chalk.green(pharos.explorer.tx(m.hash))}`);
             success = true;
           } catch (u) {
-            if (attempt < maxRetries) {
-              logger(`System | ${$} | Swap attempt ${attempt}/${maxRetries} failed: ${chalk.yellow(u.message)}. Retrying in ${retryDelay / 1000} seconds...`);
-              await etc.delay(retryDelay);
+            if (attempt < 3) {
+              logger(`System | ${$} | Swap attempt ${attempt}/3 failed: ${chalk.yellow(u.message)}. Retrying in ${5000 / 1000} seconds...`);
+              await etc.delay(5000);
               continue;
             } else {
-              logger(`System | ${$} | ${etc.timelog()} | Swap failed after ${maxRetries} attempts: ${chalk.red(u.message)}`);
+              logger(`System | ${$} | ${etc.timelog()} | Swap failed after 3 attempts: ${chalk.red(u.message)}`);
               break;
             }
           }
@@ -155,8 +174,16 @@ async function performSwapUSDC(logger) {
 }
 
 async function performSwapUSDT(logger) {
-  const maxRetries = 3; // Number of retry attempts for provider operations
-  const retryDelay = 5000; // Delay between retries (5 seconds)
+  // Load config values
+  const config = getConfig;
+  const flow = config.FLOW || {};
+  const numSwapsRange = flow.NUMBER_OF_SWAPS || [1, 1];
+  const percentSwapRange = flow.PERCENT_OF_BALANCE_TO_SWAP || [10, 10];
+  const minSwaps = numSwapsRange[0];
+  const maxSwaps = numSwapsRange[1];
+  const minPercent = percentSwapRange[0];
+  const maxPercent = percentSwapRange[1];
+  const numSwaps = Math.floor(Math.random() * (maxSwaps - minSwaps + 1)) + minSwaps;
   const transactionDelay = 3000; // Reduced delay between transactions (3 seconds)
 
   for (let a of global.selectedWallets || []) {
@@ -176,41 +203,46 @@ async function performSwapUSDT(logger) {
       let balanceEth = e.formatEther(balance);
       logger(`System | ${$} | Wallet balance: ${balanceEth} PHRS`);
 
-      let i = getRandomAmount(0.0001, 0.0003); // Random amount between 0.0001 and 0.0003 PHRS
-      let amountStr = e.formatEther(i);
+      for (let w = 1; w <= numSwaps; w++) {
+        // Calculate swap amount as a percent of balance
+        const percent = Math.random() * (maxPercent - minPercent) + minPercent;
+        let i = balance * BigInt(Math.floor(percent * 100)) / BigInt(10000); // percent of balance
+        if (i < e.parseEther('0.00001')) i = e.parseEther('0.00001');
+        let amountStr = e.formatEther(i);
 
-      // Estimate gas cost for a single transaction
-      let gasPrice = await provider.getFeeData();
-      let estimatedGasLimit = BigInt(200000); // Conservative estimate for swap
-      let gasCost = gasPrice.gasPrice * estimatedGasLimit;
-      let totalCost = i + gasCost * BigInt(global.maxTransaction);
+        // Estimate gas cost for a single transaction
+        let gasPrice = await provider.getFeeData();
+        let estimatedGasLimit = BigInt(200000); // Conservative estimate for swap
+        let gasCost = gasPrice.gasPrice * estimatedGasLimit;
+        let totalCost = i + gasCost * BigInt(global.maxTransaction);
 
-      if (balance < totalCost) {
-        logger(`System | Warning: ${$} | Insufficient balance (${balanceEth} PHRS) for ${global.maxTransaction} swaps of ${amountStr} PHRS plus gas`);
-        continue;
-      }
+        if (balance < totalCost) {
+          logger(`System | Warning: ${$} | Insufficient balance (${balanceEth} PHRS) for ${global.maxTransaction} swaps of ${amountStr} PHRS plus gas`);
+          continue;
+        }
 
-      let s = contract.WPHRS.slice(2).padStart(64, "0") + contract.USDT.slice(2).padStart(64, "0");
-      let n = i.toString(16).padStart(64, "0");
-      let l =
-        "0x04e45aaf" +
-        s +
-        "0000000000000000000000000000000000000000000000000000000000000bb8" +
-        o.toLowerCase().slice(2).padStart(64, "0") +
-        n +
-        "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
-      let c = Math.floor(Date.now() / 1e3) + 600;
-      let d = ["function multicall(uint256 deadline, bytes[] calldata data) payable"];
-      let p = new e.Contract(contract.SWAP, d, r);
-      let f = p.interface.encodeFunctionData("multicall", [c, [l]]);
+        let s = contract.WPHRS.slice(2).padStart(64, "0") + contract.USDT.slice(2).padStart(64, "0");
+        let n = i.toString(16).padStart(64, "0");
+        let l =
+          "0x04e45aaf" +
+          s +
+          "0000000000000000000000000000000000000000000000000000000000000bb8" +
+          o.toLowerCase().slice(2).padStart(64, "0") +
+          n +
+          "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
+        let c = Math.floor(Date.now() / 1e3) + 600;
+        let d = ["function multicall(uint256 deadline, bytes[] calldata data) payable"];
+        let p = new e.Contract(contract.SWAP, d, r);
+        let f = p.interface.encodeFunctionData("multicall", [c, [l]]);
 
-      for (let w = 1; w <= global.maxTransaction; w++) {
-        logger(`System | ${$} | Initiating Swap ${amountStr} PHRS to USDT (${w}/${global.maxTransaction})`);
+        logger(
+          `System | ${$} | Initiating Swap ${amountStr} PHRS to USDT (${w}/${numSwaps})`
+        );
 
         let success = false;
         let attempt = 0;
 
-        while (!success && attempt < maxRetries) {
+        while (!success && attempt < 3) {
           try {
             attempt++;
             let g = {
@@ -224,12 +256,12 @@ async function performSwapUSDT(logger) {
             try {
               gasLimit = (await provider.estimateGas(g)) * 12n / 10n; // 20% buffer
             } catch (gasError) {
-              if (attempt < maxRetries) {
-                logger(`System | ${$} | Gas estimation failed (attempt ${attempt}/${maxRetries}): ${chalk.yellow(gasError.message)}. Retrying in ${retryDelay / 1000} seconds...`);
-                await etc.delay(retryDelay);
+              if (attempt < 3) {
+                logger(`System | ${$} | Gas estimation failed (attempt ${attempt}/3): ${chalk.yellow(gasError.message)}. Retrying in ${5000 / 1000} seconds...`);
+                await etc.delay(5000);
                 continue;
               } else {
-                throw new Error(`Gas estimation failed after ${maxRetries} attempts: ${gasError.message}`);
+                throw new Error(`Gas estimation failed after 3 attempts: ${gasError.message}`);
               }
             }
 
@@ -241,12 +273,12 @@ async function performSwapUSDT(logger) {
             logger(`System | ${$} | ${etc.timelog()} | Swap Confirmed: ${chalk.green(pharos.explorer.tx(m.hash))}`);
             success = true;
           } catch (u) {
-            if (attempt < maxRetries) {
-              logger(`System | ${$} | Swap attempt ${attempt}/${maxRetries} failed: ${chalk.yellow(u.message)}. Retrying in ${retryDelay / 1000} seconds...`);
-              await etc.delay(retryDelay);
+            if (attempt < 3) {
+              logger(`System | ${$} | Swap attempt ${attempt}/3 failed: ${chalk.yellow(u.message)}. Retrying in ${5000 / 1000} seconds...`);
+              await etc.delay(5000);
               continue;
             } else {
-              logger(`System | ${$} | ${etc.timelog()} | Swap failed after ${maxRetries} attempts: ${chalk.red(u.message)}`);
+              logger(`System | ${$} | ${etc.timelog()} | Swap failed after 3 attempts: ${chalk.red(u.message)}`);
               break;
             }
           }
@@ -285,6 +317,11 @@ async function checkBalanceAndApprove(a, t, $, logger) {
 }
 
 async function addLpUSDC(logger) {
+  const config = getConfig;
+  const flow = config.FLOW || {};
+  const percentRange = flow.PERCENT_OF_BALANCE_TO_SWAP || [1, 2];
+  const minPercent = percentRange[0];
+  const maxPercent = percentRange[1];
   for (let a of global.selectedWallets || []) {
     let { privatekey: t, name: $ } = a;
     if (!t) {
@@ -299,7 +336,11 @@ async function addLpUSDC(logger) {
       if (!l) {
         continue;
       }
-      let amount = getRandomAmount(0.2, 0.5); // Random amount between 0.2 and 0.5
+      // Get balance and calculate percent to add
+      let balance = await pharos.provider().getBalance(r.address);
+      let percent = Math.random() * (maxPercent - minPercent) + minPercent;
+      let amount = balance * BigInt(Math.floor(percent * 100)) / BigInt(10000);
+      if (amount < e.parseEther('0.00001')) amount = e.parseEther('0.00001');
       let amountStr = e.formatEther(amount);
       let c = {
         token0: contract.WPHRS,
@@ -317,25 +358,37 @@ async function addLpUSDC(logger) {
       let d = o.interface.encodeFunctionData("mint", [c]);
       let p = o.interface.encodeFunctionData("refundETH", []);
       let f = [d, p];
-      for (let w = 1; w <= global.maxTransaction; w++) {
+      // Determine number of swaps for this wallet from config
+      const config = require('./getConfig');
+      const flow = config.FLOW || {};
+      const numSwapsRange = flow.NUMBER_OF_SWAPS || [1, 1];
+      const minSwaps = numSwapsRange[0];
+      const maxSwaps = numSwapsRange[1];
+      const numSwaps = Math.floor(Math.random() * (maxSwaps - minSwaps + 1)) + minSwaps;
+      for (let w = 1; w <= numSwaps; w++) {
         logger(
-          `System | ${$} | Initiating Add Liquidity ${amountStr} PHRS + ${amountStr} USDC (${w}/${global.maxTransaction})`
+          `System | ${$} | Initiating Add Liquidity ${amountStr} PHRS + ${amountStr} USDC (${w}/${numSwaps})`
         );
         let g = await o.multicall(f, {
           value: amount,
           gasLimit: 5e5,
         });
-        await g.wait(1);
-        logger(`System | ${$} | ${etc.timelog()} | Liquidity Added: ${chalk.green(pharos.explorer.tx(g.hash))}`);
-        await etc.delay(5e3);
+        let receipt = await g.wait(1);
+        logger(`System | ${$} | ${etc.timelog()} | Add Liquidity Confirmed: ${chalk.green(pharos.explorer.tx(g.hash))}`);
+        await etc.delay(5000);
       }
-    } catch (m) {
-      logger(`System | ${$} | ${etc.timelog()} | Error: ${chalk.red(m.message)}`);
+    } catch (err) {
+      logger(`System | ${$} | ${etc.timelog()} | Add Liquidity Error: ${chalk.red(err.message)}`);
     }
   }
 }
 
 async function addLpUSDT(logger) {
+  const config = getConfig;
+  const flow = config.FLOW || {};
+  const percentRange = flow.PERCENT_OF_BALANCE_TO_SWAP || [1, 2];
+  const minPercent = percentRange[0];
+  const maxPercent = percentRange[1];
   for (let a of global.selectedWallets || []) {
     let { privatekey: t, name: $ } = a;
     if (!t) {
@@ -350,7 +403,11 @@ async function addLpUSDT(logger) {
       if (!l) {
         continue;
       }
-      let amount = getRandomAmount(0.2, 0.5); // Random amount between 0.2 and 0.5
+      // Get balance and calculate percent to add
+      let balance = await pharos.provider().getBalance(r.address);
+      let percent = Math.random() * (maxPercent - minPercent) + minPercent;
+      let amount = balance * BigInt(Math.floor(percent * 100)) / BigInt(10000);
+      if (amount < e.parseEther('0.00001')) amount = e.parseEther('0.00001');
       let amountStr = e.formatEther(amount);
       let c = {
         token0: contract.WPHRS,
@@ -368,20 +425,27 @@ async function addLpUSDT(logger) {
       let d = o.interface.encodeFunctionData("mint", [c]);
       let p = o.interface.encodeFunctionData("refundETH", []);
       let f = [d, p];
-      for (let w = 1; w <= global.maxTransaction; w++) {
+      // Determine number of swaps for this wallet from config
+      const config = require('./getConfig');
+      const flow = config.FLOW || {};
+      const numSwapsRange = flow.NUMBER_OF_SWAPS || [1, 1];
+      const minSwaps = numSwapsRange[0];
+      const maxSwaps = numSwapsRange[1];
+      const numSwaps = Math.floor(Math.random() * (maxSwaps - minSwaps + 1)) + minSwaps;
+      for (let w = 1; w <= numSwaps; w++) {
         logger(
-          `System | ${$} | Initiating Add Liquidity ${amountStr} PHRS + ${amountStr} USDT (${w}/${global.maxTransaction})`
+          `System | ${$} | Initiating Add Liquidity ${amountStr} PHRS + ${amountStr} USDT (${w}/${numSwaps})`
         );
         let g = await o.multicall(f, {
           value: amount,
           gasLimit: 5e5,
         });
-        await g.wait(1);
-        logger(`System | ${$} | ${etc.timelog()} | Liquidity Added: ${chalk.green(pharos.explorer.tx(g.hash))}`);
-        await etc.delay(5e3);
+        let receipt = await g.wait(1);
+        logger(`System | ${$} | ${etc.timelog()} | Add Liquidity Confirmed: ${chalk.green(pharos.explorer.tx(g.hash))}`);
+        await etc.delay(5000);
       }
-    } catch (m) {
-      logger(`System | ${$} | ${etc.timelog()} | Error: ${chalk.red(m.message)}`);
+    } catch (err) {
+      logger(`System | ${$} | ${etc.timelog()} | Add Liquidity Error: ${chalk.red(err.message)}`);
     }
   }
 }
@@ -448,7 +512,12 @@ async function accountCheck(logger) {
         logger(`System | ${r} | Profile check failed: ${chalk.red(l.msg)}`);
         continue;
       }
-      let { ID: c, TotalPoints: d, TaskPoints: p, InvitePoints: f } = l.data.user_info;
+      // let { ID: c, TotalPoints: d, TaskPoints: ${f} } = l.data.user_info;
+      // FIX: Correct destructuring assignment
+      let c = l.data.user_info.ID;
+      let d = l.data.user_info.TotalPoints;
+      let p = l.data.user_info.TaskPoints;
+      let f = l.data.user_info.InvitePoints;
       logger(
         `System | ${r} | ${etc.timelog()} | ID: ${c}, TotalPoints: ${d}, TaskPoints: ${p}, InvitePoints: ${f}`
       );
@@ -606,7 +675,7 @@ async function claimFaucetUSDC(logger) {
 
 async function socialTask(logger) {
   let a = [201, 202, 203, 204];
-  for (let t of global.selectedWallets || []) {
+  for (let t of global.selectedWallets) {
     let { privatekey: $, token: r, name: o } = t;
     if (!$ || !r) {
       logger(`System | Warning: Skipping ${o || "wallet with missing data"} due to missing data`);

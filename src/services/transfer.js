@@ -2,11 +2,10 @@
  * src/services/transfer.js - Self-transfer service
  */
 const { ethers } = require('ethers');
-const { loadConfig } = require('../config');
+const getConfig = require('../../getConfig');
 const { retry, sleep } = require('../utils/helpers');
 
-// Load configuration
-const config = loadConfig();
+const config = getConfig();
 
 class TransferService {
   constructor(wallet, logger, walletIndex) {

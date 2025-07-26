@@ -1,6 +1,6 @@
-# Pharos Auto Bot
+# Pharos Auto Bot + Auto Run Every 24h All Tasks
 
-[![Version](https://img.shields.io/badge/version-v1.0.0-blue)](https://github.com/Kazuha787/Pharos-Auto-Bot)
+[![Version](https://img.shields.io/badge/version-v2.0.0-blue)](https://github.com/Kazuha787/Pharos-Auto-Bot)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
 **Pharos Auto Bot** is a robust, modular automation framework built in **Node.js** for interacting with the [Pharos Testnet](https://pharos.network). It handles day-to-day tasks like check-ins, faucet claims, social verifications, and on-chain operations with ease and precision.

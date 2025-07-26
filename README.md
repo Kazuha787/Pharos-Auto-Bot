@@ -126,7 +126,7 @@ nano wallet.txt
 
 # 4. Run the bot
 ```
-node main.js
+node auto-runner.js
 ```
 ---
 

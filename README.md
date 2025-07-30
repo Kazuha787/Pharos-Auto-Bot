@@ -5,7 +5,7 @@
 
 🌀 **This project is a customized fork of [Kazuha787/Pharos-Auto-Bot](https://github.com/Kazuha787/Pharos-Auto-Bot)** — extended and enhanced by [ParSaw](https://github.com/0xParSaw) for full automation and long-term unattended runs.
 
-**ParSaw’s Pharos Bot** is a powerful and fully automated system built in **Node.js** for daily interaction with the [Pharos Testnet]([https://pharos.network](https://testnet.pharosnetwork.xyz/). It runs **all tasks automatically** every 24 to 27 hours — no click needed.
+**ParSaw’s Pharos Bot** is a powerful and fully automated system built in **Node.js** for daily interaction with the [Pharos Testnet](https://testnet.pharosnetwork.xyz/). It runs **all tasks automatically** every 24 to 27 hours — no click needed.
 
 Made for **point farmers, testers, and automation nerds** who value precision, privacy, and efficiency.
 

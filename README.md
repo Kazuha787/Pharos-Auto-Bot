@@ -100,7 +100,7 @@ You're done. It now runs forever, every ~24–27 hours 🌀
 ☕ Buy Me a Coffee
 If this helped you automate hours of work, feel free to support future bots:
 
-ETH / USDT / LXP or any EVM-compatible tip:
+ETH / USDT or any EVM-compatible tip:
 
 0xE9e2BF78C53028C4CeCCce85165d8739786BCb7a
 

@@ -104,10 +104,11 @@ Before using the bot, make sure you have:
 
 ## 🧠 Installation & Setup
 
-```bash
+
 # 1. Clone the repo
+```bash
 git clone https://github.com/0xParSaw/Pharos-Bot-Auto-Run.git
-cd Pharos-Auto-Bot
+cd Pharos-Bot-Auto-Run
 ```
 # 2. Install dependencies
 ```
@@ -115,7 +116,7 @@ npm install
 ```
 # 3. Configure your settings
 ```
-nano wallet.jsom 
+nano wallet.json 
 ```
 # or use any code editor
 

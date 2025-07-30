@@ -111,7 +111,7 @@ It motivates me to keep building more awesome tools.
 Need help? Suggest a feature? Just wanna vibe?
 
 Join our discussion group →
-Telegram: @Offical_Im_kazuha
+**[→ Telegram: @Offical_Im_kazuha](https://t.me/Offical_Im_kazuha)**
 
 Or open an Issue / Pull Request
 

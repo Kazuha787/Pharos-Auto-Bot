@@ -1,167 +1,123 @@
-# Pharos Auto Bot
+# ⚡ ParSaw's Pharos Auto Bot + Auto Run (Every 24–27h)
 
-[![Version](https://img.shields.io/badge/version-v1.0.0-blue)](https://github.com/Kazuha787/Pharos-Auto-Bot)
+[![Version](https://img.shields.io/badge/version-v2.0.0-blue)](https://github.com/0xParSaw/Pharos-Bot-Auto-Run)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 
-**Pharos Auto Bot** is a robust, modular automation framework built in **Node.js** for interacting with the [Pharos Testnet](https://pharos.network). It handles day-to-day tasks like check-ins, faucet claims, social verifications, and on-chain operations with ease and precision.
+🌀 **This project is a customized fork of [Kazuha787/Pharos-Auto-Bot](https://github.com/Kazuha787/Pharos-Auto-Bot)** — extended and enhanced by [ParSaw](https://github.com/0xParSaw) for full automation and long-term unattended runs.
 
-Perfect for testers, point farmers, and developers who want to automate repetitive tasks securely and efficiently.
+**ParSaw’s Pharos Bot** is a powerful and fully automated system built in **Node.js** for daily interaction with the [Pharos Testnet](https://testnet.pharosnetwork.xyz/experience?inviteCode=cprte13gYiUj0ZPH). It runs **all tasks automatically** every 24 to 27 hours — no click needed.
 
----
-
-## Features
-
-- **Multi-Account Support**  
-  Process unlimited accounts in parallel using `wallet.json`
-
-- **Proxy Integration**  
-  Optional proxy support via `proxy.txt` for IP rotation and privacy.
-
-- **Modular Architecture**  
-  Clearly separated services and utilities for clean, scalable code.
-
-- ## Task Automation  
-  
-1. **Account Management**:
-   - Logs into accounts.
-   - Performs account check-ins.
-   - Checks account status.
-
-2. **Faucet Claims**:
-   - Claims PHRS tokens from the faucet.
-   - Claims USDC tokens from the faucet.
-
-3. **Token Swaps**:
-   - Swaps PHRS to USDC.
-   - Swaps PHRS to USDT.
-
-4. **Liquidity Provision**:
-   - Adds liquidity to PHRS-USDC pool.
-   - Adds liquidity to PHRS-USDT pool.
-
-5. **Random Transfers**:
-   - Executes random token transfers.
-
-6. **Social Tasks**:
-   - Performs social-related tasks (details not specified).
-
-7. **NFT Minting**:
-   - Mints Gotchipus NFTs.
-
-8. **OpenFi Operations**:
-   - Executes OpenFi-related tasks (details not specified).
-
-9. **Pharos Deployment**:
-   - Deploys Pharos (details not specified).
-
-10. **Auto All**:
-    - Runs all tasks automatically in a batch.
-
-11. **Transaction Count Configuration**:
-    - Allows setting the number of transactions to perform (default: 5).
-
-12. **Exit**:
-    - Terminates the bot.
-    - 
-
-- **Multi-Threaded Execution**  
-  Efficient task handling using asynchronous JavaScript threading.
-
-- **Configurable Settings**  
-  Modify task preferences, delays, threads, and API keys via `config.js`.
-
-- **Cross-Platform Compatibility**  
-  Supports Windows, macOS, and Linux (Termux-friendly too).
+Made for **point farmers, testers, and automation nerds** who value precision, privacy, and efficiency.
 
 ---
 
-## File Structure
+## 🚀 Features
+
+- **🔥 Fully Headless Auto Run**  
+  Just launch it once — it handles everything forever.
+
+- **🎯 Task #9 Mode (Do Everything)**  
+  Executes all faucet, swap, LP, NFT, OpenFi, transfer, and deployment operations.
+
+- **🔀 Proxy Support**  
+  Plug in your `proxy.txt` for stealth and IP rotation.
+
+- **🔁 24–27 Hour Smart Loop**  
+  Random delay keeps behavior human-like and anti-bot safe.
+
+- **🧩 Modular System**  
+  Clear separation of services — easy to maintain or expand.
+
+- **🧵 Multi-Account Friendly**  
+  Add unlimited accounts in `wallet.json` and let it rotate.
+
+---
+
+## ✅ Tasks Automated
+
+1. Login & Check-ins  
+2. Faucet (PHRS, USDC)  
+3. Swaps (PHRS → USDC / USDT)  
+4. Liquidity Pooling (PHRS-USDC / PHRS-USDT)  
+5. NFT Minting (Gotchipus)  
+6. Token Transfers  
+7. Social Tasks  
+8. OpenFi Operations  
+9. Pharos Deployment  
+10. Full Auto Run  
+11. Configurable Tx count  
+12. Clean Exit
+
+---
+
+## 📁 File Structure
 
 ```bash
-Pharos-Auto-Bot/
-pharos_bot/
-├── index5.js          # Main script with console-based UI and menu
-├── service.js         # Core logic for tasks, including Unlimited Faucet
-├── chains             # Configuration for Pharos testnet and utilities
-├── wallet.json        # Wallet storage for other tasks
-├── wallet.txt         # Main wallet address for transfers
-├── address.txt        # Generated wallet private keys
-├── package.json       # Node.js project configuration
-├── node_modules/      # Installed dependencies
-└── README.md          # Project documentation
+Pharos-Bot-Auto-Run/
+├── auto-runner.js      # Smart timed runner (24–27h)
+├── service.js          # Core logic for full task execution
+├── actions/option9.js  # Master script for “Do Everything”
+├── config.js           # Threading, delays, preferences
+├── proxy.txt           # Optional proxies
+├── wallet.json         # Multi-wallet storage
+├── wallet.txt          # Main wallet address
+├── address.txt         # Generated wallets
+├── package.json        # Dependencies
+└── README.md           # This doc
 ```
-## ⚙️ Requirements
+⚙️ Requirements
+Node.js v16+
 
-Before using the bot, make sure you have:
+Git
 
-- [Node.js](https://nodejs.org/) v16+
-- Git installed
-- A valid Pharos Testnet account → [pharos.network](https://pharos.network/)
-- Optional: Proxy list for stealth mode
-- Terminal confidence (a little hacker energy helps)
+Pharos Testnet account → pharos.network
 
----
+Optional: Proxies (proxy.txt)
 
-## 🧠 Installation & Setup
+Terminal basics (or just copy-paste 👀)
 
+🛠 Installation & Usage
+1. Clone the Repo
 ```bash
-# 1. Clone the repo
-git clone https://github.com/Kazuha787/Pharos-Auto-Bot.git
-cd Pharos-Auto-Bot
+git clone https://github.com/0xParSaw/Pharos-Bot-Auto-Run.git
+cd Pharos-Bot-Auto-Run
 ```
-# 2. Install dependencies
-```
+2. Install Dependencies
+```bash
 npm install
 ```
-# 3. Configure your settings
+3. Setup Your Wallets
+```bash
+nano wallet.json    # Add your accounts
+nano wallet.txt     # Main wallet address
 ```
-nano wallet.jsom 
+4. Launch Bot (Auto Run)
+```bash
+node auto-runner.js
 ```
-# or use any code editor
+You're done. It now runs forever, every ~24–27 hours 🌀
 
-# Put Your `wallet` Adddress in `wallet.txt`
-```
-nano wallet.txt
-```
+☕ Buy Me a Coffee
+If this helped you automate hours of work, feel free to support future bots:
 
-# 4. Run the bot
-```
-node main.js
-```
----
+ETH / USDT or any EVM-compatible tip:
 
-## 🤝 Community Support
+0xE9e2BF78C53028C4CeCCce85165d8739786BCb7a
 
-Need help, updates, or want to show off your setup?
+Thanks for your support! 🙏
+It motivates me to keep building more awesome tools.
 
-Join the official Telegram group for support, discussion, and announcements:  
+🤝 Community & Support
+Need help? Suggest a feature? Just wanna vibe?
+
+Join our discussion group →
 **[→ Telegram: @Offical_Im_kazuha](https://t.me/Offical_Im_kazuha)**
 
-Whether you're facing issues, contributing improvements, or just vibing — everyone's welcome.
+Or open an Issue / Pull Request
 
-Have a feature request or found a bug?  
-→ Open an [Issue](https://github.com/Kazuha787/Pharos-Auto-Bot/issues) or submit a [Pull Request](https://github.com/Kazuha787/Pharos-Auto-Bot/pulls).
+📜 License
+Released under the MIT License.
+Use, remix, fork — just keep the credits.
 
----
+See the LICENSE file for full details.
 
-## 🧾 License
-
-This project is licensed under the **MIT License**.
-
-You’re free to use, modify, and distribute it as long as the original copyright and license
-notice are included in copies or substantial portions of the software.
-
-> See full license details in the [LICENSE](LICENSE) file.
-
----
-
-## 🌱 Contributing
-
-Contributions are **highly appreciated**!
-
-If you'd like to contribute to **Pharos Auto Bot**, here's how:
-
-1. **Fork** the repository
-2. **Create a new branch**  
-   ```bash
-   git checkout -b feature/your-feature-name

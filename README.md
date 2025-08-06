@@ -113,9 +113,9 @@ cd Pharos-Auto-Bot
 ```
 npm install
 ```
-# 3. Configure your settings
+# 3. Configure your settings put your key in 
 ```
-nano wallet.jsom 
+nano wallets.txt 
 ```
 # or use any code editor
 
